@@ -1,4 +1,3 @@
-import dotenv from 'dotenv';
 import { Decryptor, Encryptor } from 'strong-cryptor';
 import short from 'short-uuid';
 import logger from './logger';
@@ -17,11 +16,13 @@ import _ from 'lodash';
 import os from 'os';
 import { appPath } from '../app';
 import dayjs from 'dayjs';
-import { env } from '../env';
 import process from 'process';
 import * as flatted from 'flatted';
+import { initGlobals } from '../common/globals';
 
-dotenv.config();
+(() => {
+    if (!global.env) initGlobals();
+})();
 
 export const jsonMaskConfig = {
     cardFields: ['credit', 'debit'],
@@ -83,14 +84,14 @@ export const isValidDateString = (dateString) => {
 export const encrypt = (value: string): string => {
     if (!value) return value;
 
-    const crypto = new Encryptor({ key: env.auth.secret });
+    const crypto = new Encryptor({ key: global.env.auth.secret });
     return crypto.encrypt(value);
 }
 
 export const decrypt = (value: string): string => {
     if (!value) return value;
 
-    const crypto = new Decryptor({ key: env.auth.secret });
+    const crypto = new Decryptor({ key: global.env.auth.secret });
     return crypto.decrypt(value);
 }
 
@@ -304,7 +305,7 @@ export const assertTrue = (value: boolean, error: Error, callback = undefined) =
 }
 
 export const handleSentry = (level, err, req = undefined, data = undefined) => {
-    if (env.mode.test) return;
+    if (global.env.mode.test) return;
 
     if (err instanceof ApiError) {
         if (err.detail?.sentry === false) return;

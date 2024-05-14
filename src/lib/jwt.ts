@@ -1,15 +1,19 @@
 import jsonwebtoken from 'jsonwebtoken';
 import { Decryptor, Encryptor } from 'strong-cryptor';
-import env from '../env';
 import logger from './logger';
 import { ITokenPayload } from '../@types/token';
 import { Builder } from 'builder-pattern';
 import { IJwtToken } from '../@types/jwt.token';
 import { TokenType } from '../common/token.type';
 import ms from 'ms';
+import { initGlobals } from '../common/globals';
+
+(() => {
+    if (!global.env) initGlobals();
+})();
 
 export const createAccessToken = (userId, clientId): string => {
-    const crypto = new Encryptor({ key: env.auth.secret });
+    const crypto = new Encryptor({ key: global.env.auth.secret });
     const encrypted = crypto.encrypt('' + userId);
     const payload = {
         user_id: userId,
@@ -17,14 +21,14 @@ export const createAccessToken = (userId, clientId): string => {
         type: TokenType.ACCESS,
         secret: encrypted,
     };
-    const expiresIn = env.policy.token.access.expire;
+    const expiresIn = global.env.policy.token.access.expire;
 
     logger.debug(`createAccessToken() userId: ${JSON.stringify(userId)}, clientId: ${JSON.stringify(clientId)}`);
 
-    return jsonwebtoken.sign(payload, env.auth.jwt.secret, {
+    return jsonwebtoken.sign(payload, global.env.auth.jwt.secret, {
         algorithm: 'HS256',
         expiresIn: ms(expiresIn),
-        issuer: env.app.name,
+        issuer: global.env.app.name,
     });
 };
 
@@ -35,10 +39,10 @@ export const createRefreshToken = () => {
         type: TokenType.REFRESH,
     };
 
-    return jsonwebtoken.sign(payload, env.auth.jwt.secret, {
+    return jsonwebtoken.sign(payload, global.env.auth.jwt.secret, {
         algorithm: 'HS256',
-        expiresIn: ms(env.policy.token.refresh.expire),
-        issuer: env.app.name,
+        expiresIn: ms(global.env.policy.token.refresh.expire),
+        issuer: global.env.app.name,
     });
 }
 
@@ -56,7 +60,7 @@ export const decode = (token: string): IJwtToken => {
 
     const decoded = jsonwebtoken.decode(token);
     if (decoded?.secret) {
-        const crypto = new Decryptor({ key: env.auth.secret });
+        const crypto = new Decryptor({ key: global.env.auth.secret });
         decoded.decrypted = parseInt(crypto.decrypt(decoded?.secret));
     }
 
@@ -72,9 +76,9 @@ export const verify = (token: string): IJwtToken => {
         return {};
     }
 
-    const decoded = jsonwebtoken.verify(token, env.auth.jwt.secret);
+    const decoded = jsonwebtoken.verify(token, global.env.auth.jwt.secret);
     if (decoded?.secret) {
-        const crypto = new Decryptor({ key: env.auth.secret });
+        const crypto = new Decryptor({ key: global.env.auth.secret });
         decoded.decrypted = parseInt(crypto.decrypt(decoded?.secret));
     }
     return decoded;
@@ -104,7 +108,7 @@ export const parseToken = (token: string): ITokenPayload => {
         }
 
         const expires_at = decoded.exp * 1000;
-        expired = expires_at - new Date().getTime() < env.policy.token.issue.margin;
+        expired = expires_at - new Date().getTime() < global.env.policy.token.issue.margin;
         result = verified && !expired;
     } catch (err) {
         logger.error(JSON.stringify(err));

@@ -1,6 +1,5 @@
 import {GetObjectCommand, GetObjectTaggingCommand, PutObjectTaggingCommand, S3Client} from '@aws-sdk/client-s3';
 import {SendMessageCommand, SQSClient} from '@aws-sdk/client-sqs';
-import env from '../env';
 import logger from '../lib/logger';
 import {Upload} from '@aws-sdk/lib-storage';
 import fs from 'fs';
@@ -11,13 +10,18 @@ import ApiMessages from './api.messages';
 import stream from 'stream';
 import path from 'path';
 import {getValidFilename} from '../lib/hangul';
+import { initGlobals } from './globals';
+
+(() => {
+    if (!global.env) initGlobals();
+})();
 
 const config = {
     region: 'ap-northeast-2',
     apiVersion: '2006-03-01',
     credentials: {
-        accessKeyId : env.aws.key.id,
-        secretAccessKey: env.aws.key.secret
+        accessKeyId : global.env.aws?.key?.id,
+        secretAccessKey: global.env.aws?.key?.secret
     }
 };
 
@@ -25,7 +29,7 @@ export const s3 = new S3Client(config);
 export const sqs =  new SQSClient(config);
 
 export const sendSqsMessage = (message) => {
-    if (!env.aws.sqs.queue.url) return;
+    if (!global.env.aws?.sqs?.queue?.url) return;
 
     // JSON CURRENT_TIMESTAMP 로 등록 방지
     message.instance.created_at = new Date();
@@ -36,7 +40,7 @@ export const sendSqsMessage = (message) => {
 
     sqs.send(new SendMessageCommand({
         MessageBody: JSON.stringify(message),
-        QueueUrl: env.aws.sqs.queue.url,
+        QueueUrl: global.env.aws?.sqs?.queue?.url,
     })).then((data) => {
         // process data.
     }).catch((error) => {

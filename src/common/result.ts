@@ -4,11 +4,17 @@ import context from 'express-http-context';
 import ApiHeaders from './api.headers';
 import i18next from 'i18next';
 import tid from 'cls-rtracer';
-import { env } from '../env';
 import dayjs from 'dayjs';
 import ip from 'ip';
 import os from 'os';
 import { encryptSimple } from '../lib/crypto';
+import { initGlobals } from './globals';
+
+(() => {
+    if (!global.env) initGlobals();
+})();
+
+const env = global.env;
 
 export class Result<T> {
     public isSuccess: boolean;

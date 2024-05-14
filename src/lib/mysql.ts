@@ -4,26 +4,30 @@ import * as process from 'process';
 import { initialize } from './init';
 import { validateSchemas } from './validate-schema';
 import { isMasterProcess } from 'pm2-master-process';
-import { env } from '../env';
+import { initGlobals } from '../common/globals';
 
-const sequelize = env.mysql.schema?.length > 0 ? new Sequelize(env.mysql.schema, null, null, {
+(() => {
+    if (!global.env) initGlobals();
+})();
+
+const sequelize = global.env.mysql.schema?.length > 0 ? new Sequelize(global.env.mysql.schema, null, null, {
     dialect: 'mysql',
     dialectOptions: {
-        connectTimeout: env.mode.prod ? 5000 : 60000 // 5s for prod, 1min for dev
+        connectTimeout: global.env.mode.prod ? 5000 : 60000 // 5s for prod, 1min for dev
     },
-    port: parseInt(env.mysql.port, 10),
+    port: parseInt(global.env.mysql.port, 10),
     replication: {
         read: [
             {
-                host: env.mysql.read.host,
-                username: env.mysql.read.username,
-                password: env.mysql.read.password
+                host: global.env.mysql.read.host,
+                username: global.env.mysql.read.username,
+                password: global.env.mysql.read.password
             }
         ],
         write: {
-            host: env.mysql.write.host,
-            username: env.mysql.write.username,
-            password: env.mysql.write.password
+            host: global.env.mysql.write.host,
+            username: global.env.mysql.write.username,
+            password: global.env.mysql.write.password
         }
     },
     define: {
@@ -43,7 +47,7 @@ const sequelize = env.mysql.schema?.length > 0 ? new Sequelize(env.mysql.schema,
         }
     },
     timezone: '+09:00',
-    logQueryParameters: !env.mode.prod,
+    logQueryParameters: !global.env.mode.prod,
     logging: (query) => {
         if (query?.includes('SELECT 1+1 AS result')) return;
         logger.sql(query.replace(/(\r\n|\n|\r)/gm, ''));
@@ -57,7 +61,7 @@ export function initModels() {
 }
 
 export function connect() {
-    if (!env.mysql.schema) return Promise.resolve(sequelize);
+    if (!global.env.mysql.schema) return Promise.resolve(sequelize);
 
     return new Promise((resolve, reject) => {
         initModels();
@@ -71,7 +75,7 @@ export function connect() {
 
                 try {
                     if (isMaster) {
-                        await validateSchemas(sequelize, { logging: env.mode.prod ? logger.debug : console.log });
+                        await validateSchemas(sequelize, { logging: global.env.mode.prod ? logger.debug : console.log });
                         await initialize();
                     }
                     resolve(sequelize);

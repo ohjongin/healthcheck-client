@@ -1,14 +1,17 @@
-import { env } from '../env';
 import logger from '../lib/logger';
 import { WebSocketServer } from 'ws';
 import * as jwt from '../lib/jwt';
-import UserService from '../api/v1/users/user.service';
 import crypto from 'crypto';
+import { initGlobals } from '../common/globals';
+
+(() => {
+    if (!global.env) initGlobals();
+})();
 
 const clients = new Map();
 
 export const listenWebSocket = (server) => {
-    if (!env.app.websocket) return undefined;
+    if (!global.env.app?.websocket) return undefined;
 
     /**
      * Core server 인증 token 값을 parameter로 접속해야 함.
@@ -36,7 +39,6 @@ export const listenWebSocket = (server) => {
 
             if (token && token?.user_id) {
                 // info.req.user is either null or the user and you can destroy the connection if its null
-                info.req.user = await UserService.get(token.user_id);
             }
 
             done(info.req);

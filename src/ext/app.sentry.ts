@@ -1,4 +1,4 @@
-import { env } from '../env';
+
 import fs from 'fs';
 import logger from '../lib/logger';
 import { handleSentry } from '../lib/utils';
@@ -6,6 +6,13 @@ import * as Sentry from '@sentry/node';
 import { ProfilingIntegration } from '@sentry/profiling-node';
 import { app } from '../app';
 import { build, version } from '../../package.json';
+import { initGlobals } from '../common/globals';
+
+(() => {
+    if (!global.env) initGlobals();
+})();
+
+const env = global.env;
 
 export const initSentry = () => {
     if (env.app.sentry.dsn?.length < 1) return;

@@ -1,5 +1,4 @@
 import cors from 'cors';
-import { env } from '../env';
 import logger from '../lib/logger';
 import helmet from 'helmet';
 import { app, appPath } from '../app';
@@ -23,6 +22,13 @@ import * as Sentry from '@sentry/node';
 import * as Api from './app.router';
 import Backend from 'i18next-fs-backend/cjs';
 import { removeSensitiveValues } from '../lib/model.util';
+import { initGlobals } from '../common/globals';
+
+(() => {
+    if (!global.env) initGlobals();
+})();
+
+const env = global.env;
 
 const supportLanguages = ['ko', 'en', 'jp', 'ja'];
 

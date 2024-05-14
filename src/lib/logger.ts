@@ -6,11 +6,17 @@ import tid from 'cls-rtracer';
 import path from 'path';
 import { getFileInfo, handleSentry, isValidArray, jsonMaskConfig, prune } from './utils';
 import * as stackTraceParser from 'stacktrace-parser';
-import { env } from '../env';
 import fs from 'fs';
 import * as process from 'process';
 import { format } from 'date-fns';
 import maskdata from 'maskdata';
+import { initGlobals } from '../common/globals';
+
+(() => {
+    if (!global.env) initGlobals();
+})();
+
+const env = global.env;
 
 const { combine, timestamp, colorize, printf } = winston.format;
 

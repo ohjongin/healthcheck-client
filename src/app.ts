@@ -1,6 +1,5 @@
 import express from 'express';
 import logger from './lib/logger';
-import { env } from './env';
 import * as mysql from './lib/mysql';
 import { build, version } from '../package.json';
 import * as process from 'process';
@@ -9,6 +8,13 @@ import os from 'os';
 import { finalizeSentry, initSentry } from './ext/app.sentry';
 import { initExpress } from './ext/app.express';
 import { handleSentry } from './lib/utils';
+import { initGlobals } from './common/globals';
+
+(() => {
+    if (!global.env) initGlobals();
+})();
+
+const env = global.env;
 
 export const app = express();
 export const appPath = __dirname;
