@@ -89,10 +89,6 @@ export const getEnv = () => {
         init: {
         },
         auth: {
-            jwt: {
-                secret: getOsEnv('SECRET_JWT'),
-            },
-            secret: getOsEnv('SECRET_KEY'),
         },
         mysql: {
             name:  getOsEnvOptional('MYSQL_NAME', undefined),
