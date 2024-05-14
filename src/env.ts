@@ -87,13 +87,6 @@ export const getEnv = () => {
             stage: process.env.STAGE?.toUpperCase(),
         },
         init: {
-            db: {
-                root: {
-                    email: getOsEnv('ROOT_EMAIL'),
-                    name: getOsEnv('ROOT_NAME'),
-                    password: getOsEnv('ROOT_PASSWORD'),
-                },
-            },
         },
         auth: {
             jwt: {
